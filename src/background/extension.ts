@@ -46,6 +46,23 @@ function urlsEqual(urlA: string, urlB: string) {
 }
 
 /**
+ * Local sample docs used during development should open the sidebar
+ * automatically. This keeps the AE dev loop usable from a fresh page load.
+ */
+function shouldAutoActivateLocalSampleDoc(url: string) {
+  try {
+    const parsed = new URL(url);
+    return (
+      parsed.protocol === 'http:' &&
+      ['127.0.0.1', 'localhost'].includes(parsed.hostname) &&
+      parsed.port === '8765'
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
  * The main extension background application.
  *
  * This is responsible for tracking the state of the extension in each tab and
@@ -102,6 +119,10 @@ export class Extension {
         return;
       }
 
+      if (extensionInfo.name.includes('AI-Assisted Mod')) {
+        return;
+      }
+
       const tab = await chromeAPI.tabs.create({
         url: settings.serviceUrl + 'welcome',
       });
@@ -154,6 +175,8 @@ export class Extension {
           continue;
         }
         const isActive = activeStates[i];
+        const autoActivate =
+          tab.url !== undefined && shouldAutoActivateLocalSampleDoc(tab.url);
 
         // nb. If tab status is not available, we optimistically assume it is
         // loaded.
@@ -161,7 +184,7 @@ export class Extension {
           tab.status === 'complete' || typeof tab.status !== 'string';
 
         state.setState(tab.id, {
-          state: isActive ? 'active' : 'inactive',
+          state: isActive || autoActivate ? 'active' : 'inactive',
           extensionSidebarInstalled: isActive,
           ready,
         });
@@ -230,7 +253,9 @@ export class Extension {
 
     function resetTabState(tabId: number, url: string) {
       state.setState(tabId, {
-        state: activeStateForNavigatedTab(tabId),
+        state: shouldAutoActivateLocalSampleDoc(url)
+          ? 'active'
+          : activeStateForNavigatedTab(tabId),
         ready: false,
         annotationCount: 0,
         extensionSidebarInstalled: false,
@@ -266,6 +291,9 @@ export class Extension {
         currentlyLoadingUrl.delete(tabId);
         const tabState = state.getState(tabId);
         let newActiveState = tabState.state;
+        if (shouldAutoActivateLocalSampleDoc(url)) {
+          newActiveState = 'active';
+        }
         if (tabState.directLinkQuery) {
           newActiveState = 'active';
         }
@@ -348,6 +376,7 @@ export class Extension {
         const config = {
           assetRoot: chromeAPI.runtime.getURL('/client/'),
           notebookAppUrl: chromeAPI.runtime.getURL('/client/notebook.html'),
+          openSidebar: true,
           profileAppUrl: chromeAPI.runtime.getURL('/client/profile.html'),
           sidebarAppUrl: chromeAPI.runtime.getURL('/client/app.html'),
 
