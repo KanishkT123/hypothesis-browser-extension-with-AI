@@ -36,7 +36,10 @@ function getVersion(buildType) {
     throw new Error('cannot create production build with dirty git state!');
   }
 
-  const version = `${gitInfo.semver}.${gitInfo.distance}`;
+  const packageInfo = JSON.parse(fs.readFileSync('package.json'));
+  const version = gitInfo.semver
+    ? `${gitInfo.semver}.${gitInfo.distance}`
+    : packageInfo.version;
   let versionName = '';
 
   if (buildType !== 'production') {
