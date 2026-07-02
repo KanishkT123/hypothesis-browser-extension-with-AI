@@ -376,6 +376,7 @@ export class Extension {
         const config = {
           assetRoot: chromeAPI.runtime.getURL('/client/'),
           notebookAppUrl: chromeAPI.runtime.getURL('/client/notebook.html'),
+          nodeLinkAppUrl: chromeAPI.runtime.getURL('/client/node-link.html'),
           openSidebar: true,
           profileAppUrl: chromeAPI.runtime.getURL('/client/profile.html'),
           sidebarAppUrl: chromeAPI.runtime.getURL('/client/app.html'),

@@ -51,6 +51,7 @@ extension: build/extension.bundle.js
 extension: build/manifest.json
 extension: build/client/build
 extension: build/client/app.html
+extension: build/client/node-link.html
 extension: build/client/notebook.html
 extension: build/client/profile.html
 extension: build/unload-client.js
@@ -73,6 +74,8 @@ build/client/build: node_modules/hypothesis/build/manifest.json
 build/client/app.html: src/sidebar-app.html.mustache build/client build/settings.json
 	tools/template-context-app.js build/settings.json | $(MUSTACHE) - $< >$@
 build/client/notebook.html: build/client/app.html
+	cp $< $@
+build/client/node-link.html: build/client/app.html
 	cp $< $@
 build/client/profile.html: build/client/app.html
 	cp $< $@
